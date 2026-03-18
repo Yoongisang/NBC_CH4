@@ -1,6 +1,6 @@
 # NBC_CH4 - 멀티플레이어 숫자 야구 게임
 
-Unreal Engine 5 C++ 기반의 멀티플레이어 채팅 + 숫자 야구 게임 프로젝트입니다.
+Unreal Engine 5.6 C++ 기반의 멀티플레이어 채팅 + 숫자 야구 게임 프로젝트입니다.
 플레이어들이 채팅을 통해 소통하며, 서버가 생성한 3자리 비밀 번호를 맞추는 숫자 야구 게임을 진행합니다.
 
 ---
@@ -8,7 +8,7 @@ Unreal Engine 5 C++ 기반의 멀티플레이어 채팅 + 숫자 야구 게임 �
 ## 과제 소개
 
 - **주제**: 멀티플레이어 환경에서 채팅 시스템과 숫자 야구 게임을 결합한 네트워크 게임
-- **목표**: UE5의 네트워크 리플리케이션(RPC, Replicated Property)을 활용하여 실시간 멀티플레이어 게임 구현
+- **목표**: UE5.6의 네트워크 리플리케이션(RPC, Replicated Property)을 활용하여 실시간 멀티플레이어 게임 구현
 - **핵심 학습 요소**:
   - Server/Client RPC (ServerRPC, ClientRPC, MulticastRPC)
   - Property Replication (`GetLifetimeReplicatedProps`)
@@ -104,7 +104,7 @@ Source/NBC_CH4/
 ## 구현 과정
 
 ### Step 1. 프로젝트 초기 설정 (2026-03-17)
-- UE5 프로젝트 생성 및 기본 모듈 구성
+- UE5.6 프로젝트 생성 및 기본 모듈 구성
 - GameModeBase, GameStateBase, PlayerController, PlayerState, ChatInput 클래스 뼈대 생성
 - 멀티플레이어를 위한 리플리케이션 기본 설정 (`bReplicates = true`)
 - Blueprint 클래스 (BP_GameModeBase, BP_PlayerController) 및 맵(Chatting) 생성
@@ -137,7 +137,7 @@ Source/NBC_CH4/
 
 - **엔진**: Unreal Engine 5.6
 - **언어**: C++ / Blueprint
-- **네트워크**: UE5 내장 리플리케이션 시스템 (RPC, Replicated Properties)
+- **네트워크**: UE5.6 내장 리플리케이션 시스템 (RPC, Replicated Properties)
 - **UI**: UMG (Unreal Motion Graphics)
 
 ---
