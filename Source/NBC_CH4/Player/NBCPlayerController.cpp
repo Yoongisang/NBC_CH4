@@ -18,7 +18,7 @@ ANBCPlayerController::ANBCPlayerController()
 void ANBCPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	// 복제할 프로퍼티 등록
 	DOREPLIFETIME(ThisClass, NotificationText);
 }
 
