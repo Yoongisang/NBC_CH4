@@ -8,6 +8,19 @@
 #include "Kismet/GameplayStatics.h"
 #include "Game/NBCGameModeBase.h"
 #include "NBCPlayerState.h"
+#include "Net/UnrealNetwork.h"
+
+ANBCPlayerController::ANBCPlayerController()
+{
+	bReplicates = true;
+}
+
+void ANBCPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, NotificationText);
+}
 
 void ANBCPlayerController::BeginPlay()
 {
@@ -21,14 +34,23 @@ void ANBCPlayerController::BeginPlay()
 
 	if (IsValid(ChatInputWidgetClass) == false)
 		return;
-
+	// 채팅 UI
 	ChatInputWidgetInstance = CreateWidget<UNBCChatInput>(this, ChatInputWidgetClass);
 	if (IsValid(ChatInputWidgetInstance) == false)
 		return;
 
+	// 알림 UI
+	if (IsValid(NotificationTextWidgetClass) == false)
+		return;
+
+	NotificationTextWidgetInstance = CreateWidget<UUserWidget>(this, NotificationTextWidgetClass);
+	if (IsValid(NotificationTextWidgetInstance) == false)
+		return;
+
 	ChatInputWidgetInstance->AddToViewport();
-	
+	NotificationTextWidgetInstance->AddToViewport();
 }
+
 void ANBCPlayerController::SetChatMessageString(const FString& InChatMessageString)
 {
 	ChatMessageString = InChatMessageString;

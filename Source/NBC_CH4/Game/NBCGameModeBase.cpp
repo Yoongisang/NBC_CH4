@@ -15,8 +15,18 @@ void ANBCGameModeBase::OnPostLogin(AController* NewPlayer)
 	if (IsValid(NBCPlayerController) == false)
 		return;
 
-	AllPlayerControllers.Add(NBCPlayerController);
+	NBCPlayerController->NotificationText = FText::FromString(TEXT("Connected to the game server."));
 
+	// 5초 후 초기화
+	GetWorldTimerManager().SetTimer(
+		NBCPlayerController->NotificationTimerHandle,
+		[NBCPlayerController]()
+		{
+			NBCPlayerController->NotificationText = FText::GetEmpty();
+		},
+		5.0f, false);
+
+	AllPlayerControllers.Add(NBCPlayerController);
 	ANBCPlayerState* NBCPS = NBCPlayerController->GetPlayerState<ANBCPlayerState>();
 	if (IsValid(NBCPS) == false)
 		return;
@@ -74,6 +84,12 @@ bool ANBCGameModeBase::IsGuessNumberString(const FString& InNumberString)
 				break;
 			}
 
+			if (UniqueDigits.Contains(C))
+			{
+				bIsUnique = false;
+				break;
+			}
+
 			UniqueDigits.Add(C);
 		}
 
@@ -120,20 +136,28 @@ void ANBCGameModeBase::BeginPlay()
 	Super::BeginPlay();
 
 	SecretNumberString = GenerateSecretNumber();
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *SecretNumberString);
 }
 
 void ANBCGameModeBase::PrintChatMessageString(ANBCPlayerController* InChattingPlayerController, const FString& InChatMessageString)
 {
-	int Index = InChatMessageString.Len() - 3;
-	FString GuessNumberString = InChatMessageString.RightChop(Index);
-	if (IsGuessNumberString(GuessNumberString) == true)
-	{
-		FString JudgeResultString = JudgeResult(SecretNumberString, GuessNumberString);
-		IncreaseGuessCount(InChattingPlayerController);
+	ANBCPlayerState* NBCPS = InChattingPlayerController->GetPlayerState<ANBCPlayerState>();
+	if (IsValid(NBCPS) == false)
+		return;
 
-		ANBCPlayerState* NBCPS = InChattingPlayerController->GetPlayerState<ANBCPlayerState>();
-		if (IsValid(NBCPS) == false)
+
+	if (InChatMessageString.Len() == 3 &&  IsGuessNumberString(InChatMessageString) == true)
+	{
+		// 기회를 모두 소진했을 경우
+		if (NBCPS->CurrentGuessCount >= NBCPS->MaxGuessCount)
+		{
+			InChattingPlayerController->ClientRPCPrintChatMessageString(TEXT("기회를 모두 소진했습니다."));
 			return;
+		}
+
+		// 정답만 제출했고 조건이 맞을때
+		FString JudgeResultString = JudgeResult(SecretNumberString, InChatMessageString);
+		IncreaseGuessCount(InChattingPlayerController);
 
 		for (TActorIterator<ANBCPlayerController> It(GetWorld()); It; ++It)
 		{
@@ -144,17 +168,27 @@ void ANBCGameModeBase::PrintChatMessageString(ANBCPlayerController* InChattingPl
 			FString CombinedMessageString = NBCPS->GetPlayerInfoString() + TEXT(": ") + InChatMessageString + TEXT(" -> ") + JudgeResultString;
 			NBCPlayerController->ClientRPCPrintChatMessageString(CombinedMessageString);
 			
+			
 		}
+		int32 StrikeCount = FCString::Atoi(*JudgeResultString.Left(1));
+		JudgeGame(InChattingPlayerController, StrikeCount);
+	}
+	else if (InChatMessageString.Len() == 3 && InChatMessageString.IsNumeric())
+	{
+		// 3자리이지만 규칙에 안맞을때 나오는 안내
+		InChattingPlayerController->ClientRPCPrintChatMessageString(TEXT("다시 입력하세요."));
 	}
 	else
 	{
+		// 일반 채팅
 		for (TActorIterator<ANBCPlayerController> It(GetWorld()); It; ++It)
 		{
 			ANBCPlayerController* NBCPlayerController = *It;
 			if (IsValid(NBCPlayerController) == false)
 				continue;
 
-			NBCPlayerController->ClientRPCPrintChatMessageString(InChatMessageString);
+			FString CombinedMessageString = NBCPS->PlayerNameString + TEXT(": ") + InChatMessageString;
+			NBCPlayerController->ClientRPCPrintChatMessageString(CombinedMessageString);
 			
 		}
 	}
@@ -167,5 +201,79 @@ void ANBCGameModeBase::IncreaseGuessCount(ANBCPlayerController* InChattingPlayer
 		return;
 
 	NBCPS->CurrentGuessCount++;
+}
+
+void ANBCGameModeBase::ResetGame()
+{
+	SecretNumberString = GenerateSecretNumber();
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *SecretNumberString);
+
+	for (const auto& NBCPlayerController : AllPlayerControllers)
+	{
+		ANBCPlayerState* NBCPS = NBCPlayerController->GetPlayerState<ANBCPlayerState>();
+		if (IsValid(NBCPS) == false)
+			continue;
+
+		NBCPS->CurrentGuessCount = 0;
+	}
+}
+
+void ANBCGameModeBase::JudgeGame(ANBCPlayerController* InChattingPlayerController, int InStrikeCount)
+{
+	if (3 == InStrikeCount)
+	{
+		ANBCPlayerState* NBCPS = InChattingPlayerController->GetPlayerState<ANBCPlayerState>();
+		for (const auto& NBCPlayerController : AllPlayerControllers)
+		{
+			if (IsValid(NBCPS) == false)
+				continue;
+			FString CombinedMessageString = NBCPS->PlayerNameString + TEXT(" has won the game.");
+			NBCPlayerController->NotificationText = FText::FromString(CombinedMessageString);
+
+			// 5초 후 초기화
+			GetWorldTimerManager().SetTimer(
+				NBCPlayerController->NotificationTimerHandle,
+				[NBCPlayerController]()
+				{
+					NBCPlayerController->NotificationText = FText::GetEmpty();
+				},
+				5.0f, false);
+		}
+		ResetGame();
+	}
+	else
+	{
+		bool bIsDraw = true;
+		for (const auto& NBCPlayerController : AllPlayerControllers)
+		{
+			ANBCPlayerState* NBCPS = NBCPlayerController->GetPlayerState<ANBCPlayerState>();
+			if (IsValid(NBCPS) == false)
+				continue;
+
+			if (NBCPS->CurrentGuessCount >= NBCPS->MaxGuessCount)
+				continue;
+
+			bIsDraw = false;
+			break;
+		}
+
+		if (bIsDraw == true)
+		{
+			for (const auto& NBCPlayerController : AllPlayerControllers)
+			{
+				NBCPlayerController->NotificationText = FText::FromString(TEXT("Draw..."));
+
+				// 5초 후 초기화
+				GetWorldTimerManager().SetTimer(
+					NBCPlayerController->NotificationTimerHandle,
+					[NBCPlayerController]()
+					{
+						NBCPlayerController->NotificationText = FText::GetEmpty();
+					},
+					5.0f, false);
+			}
+			ResetGame();
+		}
+	}
 }
 

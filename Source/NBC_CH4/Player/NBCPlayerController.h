@@ -7,6 +7,7 @@
 #include "NBCPlayerController.generated.h"
 
 class UNBCChatInput;
+class UUserWidget;
 /**
  * 
  */
@@ -16,6 +17,10 @@ class NBC_CH4_API ANBCPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	ANBCPlayerController();
+
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void BeginPlay() override;
 
 	void SetChatMessageString(const FString& InChatMessageString);
@@ -28,6 +33,11 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPCPrintChatMessageString(const FString& InChatMessageString);
 
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	FText NotificationText;
+
+	FTimerHandle NotificationTimerHandle;
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UNBCChatInput> ChatInputWidgetClass;
@@ -36,4 +46,10 @@ protected:
 	TObjectPtr<UNBCChatInput> ChatInputWidgetInstance;
 
 	FString ChatMessageString;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> NotificationTextWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> NotificationTextWidgetInstance;
 };
