@@ -4,10 +4,17 @@
 #include "NBCPlayerController.h"
 #include "UI/NBCChatInput.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "EngineUtils.h"
+#include "Kismet/GameplayStatics.h"
+#include "Game/NBCGameModeBase.h"
+#include "NBCPlayerState.h"
 
 void ANBCPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocalController() == false)
+		return;
 
 	FInputModeUIOnly InputModeUIOnly;
 	SetInputMode(InputModeUIOnly);
@@ -22,16 +29,36 @@ void ANBCPlayerController::BeginPlay()
 	ChatInputWidgetInstance->AddToViewport();
 	
 }
-void ANBCPlayerController::SetChatMessageString(const FString& InChatMessgeString)
+void ANBCPlayerController::SetChatMessageString(const FString& InChatMessageString)
 {
-	ChatMessageString = InChatMessgeString;
-	// 출력 함수로 전달
-	PrintChatMessageString(ChatMessageString);
+	ChatMessageString = InChatMessageString;
+
+	if (IsLocalController() == false)
+		return;
+
+	ServerRPCPrintChatMessageString(InChatMessageString);
 }
 
 void ANBCPlayerController::PrintChatMessageString(const FString& InChatMessageString)
 {
-	// 메세지 출력
-	UKismetSystemLibrary::PrintString(this, ChatMessageString, true, true, FLinearColor::Red, 5.0f);
+	UKismetSystemLibrary::PrintString(this, InChatMessageString, true, true, FLinearColor::Red, 5.0f);
+}
+
+void ANBCPlayerController::ClientRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
+{
+	PrintChatMessageString(InChatMessageString);
+}
+
+void ANBCPlayerController::ServerRPCPrintChatMessageString_Implementation(const FString& InChatMessageString)
+{
+	AGameModeBase* GM = UGameplayStatics::GetGameMode(this);
+	if (IsValid(GM) == false)
+		return;
+
+	ANBCGameModeBase* NBCGM = Cast<ANBCGameModeBase>(GM);
+	if (IsValid(NBCGM) == false)
+		return;
+
+	NBCGM->PrintChatMessageString(this, InChatMessageString);
 }
 
