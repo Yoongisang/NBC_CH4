@@ -146,6 +146,7 @@ Source/NBC_CH4/
 
 1. Unreal Engine 5에서 프로젝트 열기
 2. `Chatting` 맵 로드
-3. 멀티플레이어 테스트: **Play** → **Number of Players: 2 이상** → **Net Mode: Listen Server**
+3. 멀티플레이어 테스트: **Play** → **Net Mode: Play As Client** → **Number of Players: 1~2명**
+4. 1명으로 시작한 경우 **Late Joining**으로 추가 플레이어 접속 가능
 4. 채팅창에 텍스트 입력 후 Enter → 일반 채팅
 5. 3자리 숫자(1~9, 중복 없음) 입력 후 Enter → 숫자 야구 추측
