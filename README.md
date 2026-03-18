@@ -135,7 +135,7 @@ Source/NBC_CH4/
 
 ## 기술 스택
 
-- **엔진**: Unreal Engine 5
+- **엔진**: Unreal Engine 5.6
 - **언어**: C++ / Blueprint
 - **네트워크**: UE5 내장 리플리케이션 시스템 (RPC, Replicated Properties)
 - **UI**: UMG (Unreal Motion Graphics)
@@ -144,7 +144,7 @@ Source/NBC_CH4/
 
 ## 실행 방법
 
-1. Unreal Engine 5에서 프로젝트 열기
+1. Unreal Engine 5.6에서 프로젝트 열기
 2. `Chatting` 맵 로드
 3. 멀티플레이어 테스트: **Play** → **Net Mode: Play As Client** → **Number of Players: 1~2명**
 4. 1명으로 시작한 경우 **Late Joining**으로 추가 플레이어 접속 가능
